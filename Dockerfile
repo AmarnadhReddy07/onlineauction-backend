@@ -1,21 +1,14 @@
-# Step 1: Build stage
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Use Java 17 (since you are using JavaSE-17)
+FROM openjdk:17-jdk-slim
 
+# Set working directory
 WORKDIR /app
 
-COPY pom.xml .
-RUN mvn -B -q -e -DskipTests dependency:go-offline
+# Copy jar file (after build)
+COPY target/*.jar app.jar
 
-COPY src ./src
-RUN mvn clean package -DskipTests
-
-# Step 2: Run stage
-FROM eclipse-temurin:17-jdk-alpine
-
-WORKDIR /app
-
-COPY --from=build /app/target/*.jar app.jar
-
+# Expose port (Spring Boot default)
 EXPOSE 8080
 
-ENTRYPOINT ["java","-jar","app.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
