@@ -1,32 +1,52 @@
 package com.auction.controller;
 
-import com.auction.model.User;
-import com.auction.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.auction.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "https://onlineauction-frontend.onrender.com")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserService userService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
 
+    // POST /auth/register
+    // Body: { "name": "Amar", "email": "amar@gmail.com", "password": "12345678" }
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
-
-        if(userRepository.existsByEmail(user.getEmail())) {
-            return "Email already exists";
+    public ResponseEntity<?> register(@RequestBody Map<String, String> payload) {
+        try {
+            Map<String, String> result = userService.register(
+                    payload.get("name"),
+                    payload.get("email"),
+                    payload.get("password")
+            );
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
         }
+    }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-
-        return "User Registered Successfully";
+    // POST /auth/login
+    // Body: { "email": "amar@gmail.com", "password": "12345678" }
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
+        try {
+            Map<String, String> result = userService.login(
+                    payload.get("email"),
+                    payload.get("password")
+            );
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", e.getMessage()));
+        }
     }
 }

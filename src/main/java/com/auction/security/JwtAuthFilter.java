@@ -1,14 +1,14 @@
 package com.auction.security;
 
+import com.auction.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -17,11 +17,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil = new JwtUtil();
-    private final UserDetailsService userDetailsService = null;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
+
+    // @Lazy prevents circular dependency
+    public JwtAuthFilter(JwtUtil jwtUtil, @Lazy UserService userService) {
+        this.jwtUtil     = jwtUtil;
+        this.userService = userService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -32,8 +37,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = extractToken(request);
 
         if (token != null && jwtUtil.validateToken(token)) {
-            String username = jwtUtil.getUsernameFromToken(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            String email = jwtUtil.getEmailFromToken(token);
+            UserDetails userDetails = userService.loadUserByUsername(email);
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(

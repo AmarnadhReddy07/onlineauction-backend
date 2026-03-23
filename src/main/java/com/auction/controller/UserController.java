@@ -1,37 +1,65 @@
 package com.auction.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import com.auction.model.User;
 import com.auction.service.UserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "https://onlineauction-frontend.onrender.com")
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    // Register User
-    @PostMapping
-    public User registerUser(@RequestBody User user) {
-        return userService.saveUser(user);
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    // Get All Users
+    // POST /api/auth/register
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody Map<String, String> payload) {
+        try {
+            Map<String, String> result = userService.register(
+                    payload.get("name"),
+                    payload.get("email"),
+                    payload.get("password")
+            );
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // POST /api/auth/login
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> payload) {
+        try {
+            Map<String, String> result = userService.login(
+                    payload.get("email"),
+                    payload.get("password")
+            );
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // GET /api/auth
     @GetMapping
     public List<User> getUsers() {
         return userService.getAllUsers();
     }
 
-    // Delete User
+    // DELETE /api/auth/{id}
     @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return "User deleted successfully";
+        return ResponseEntity.ok(Map.of("message", "User deleted successfully."));
     }
 }

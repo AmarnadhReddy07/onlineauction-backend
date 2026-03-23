@@ -1,44 +1,53 @@
 package com.auction.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Positive;
-import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bids")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Bid {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Positive
     @Column(nullable = false)
     private Double amount;
 
     @Column(name = "placed_at")
     private LocalDateTime placedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Product product;
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bidder_id", nullable = false)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private User bidder;
+    @Column(name = "bidder_email", nullable = false)
+    private String bidderEmail;
+
+    @Column(name = "bidder_name")
+    private String bidderName;
 
     @PrePersist
     protected void onCreate() {
         this.placedAt = LocalDateTime.now();
     }
+
+    public Bid() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Double getAmount() { return amount; }
+    public void setAmount(Double amount) { this.amount = amount; }
+
+    public LocalDateTime getPlacedAt() { return placedAt; }
+    public void setPlacedAt(LocalDateTime placedAt) { this.placedAt = placedAt; }
+
+    public Long getProductId() { return productId; }
+    public void setProductId(Long productId) { this.productId = productId; }
+
+    public String getBidderEmail() { return bidderEmail; }
+    public void setBidderEmail(String bidderEmail) { this.bidderEmail = bidderEmail; }
+
+    public String getBidderName() { return bidderName; }
+    public void setBidderName(String bidderName) { this.bidderName = bidderName; }
 }
